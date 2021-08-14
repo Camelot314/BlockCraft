@@ -181,7 +181,7 @@ public class ThreadHandler : MonoBehaviour
             meshData = MeshGenerator.GenerateTerrainMesh(mapData, mapGenerator.GetMeshHeightCurve(), lod, MapGenerator.GetMapVerts(), uvHolder);
         } else
         {
-            meshData = MeshGenerator.GenerateMeshFromChunk(mapData);
+            meshData = MeshGenerator.GenerateMeshFromChunk(mapData, uvHolder);
         }
         lock (meshDataThreadInfoQueue)
         {

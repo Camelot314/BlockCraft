@@ -213,9 +213,14 @@ public static class MeshGenerator
     /// such as regenerating a block id list.
     /// </summary>
     /// <param name="mapData">MapData object with the information</param>
+    /// <param name="uvHolder">Reference to the object that holds the uvs.</param>
     /// <returns>MeshData object that has all info to make a mesh</returns>
-    public static MeshData GenerateMeshFromChunk(MapData mapData)
+    public static MeshData GenerateMeshFromChunk(MapData mapData, BlockUVHolder uvHolder)
     {
+        if (MeshGenerator.uvHolder == null)
+        {
+            MeshGenerator.uvHolder = uvHolder;
+        }
         short[,,] blockIds = mapData.GetHighResChunkArray();
 
         AddAdjustments(mapData, blockIds, 1);
