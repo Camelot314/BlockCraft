@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform eyes;
     [SerializeField] private ItemBar itemBar;
     [SerializeField] private GameObject hat, crossHairs, hud, pauseMenu;
-    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioScript audioScript;
 
     [Header("Camera Controls")]
     [SerializeField] private CamType camMode;
@@ -75,7 +75,8 @@ public class Player : MonoBehaviour
         ToggleHUD(pause);
         flying = pause;
         pauseMenu.SetActive(pause);
-        
+        audioScript.Pause(pause);
+        hideHUD = pause;
 
         if (camMode == CamType.FirstPerson)
         {
@@ -88,12 +89,10 @@ public class Player : MonoBehaviour
         if (pause)
         {
             Cursor.lockState = CursorLockMode.None;
-            audioSource.Pause();
 
         } else
         {
             Cursor.lockState = CursorLockMode.Locked;
-            audioSource.Play();
         }
     }
 
@@ -420,9 +419,46 @@ public class Player : MonoBehaviour
     private void AdjustChunk(Vector3 rayDirection, RaycastHit hitInfo, bool addBlock)
     {
         Vector3 chunkPos = hitInfo.transform.position;
-        TerrainChunk chunk = endlessTerrainScript.GetTerrainChunk(chunkPos);
+        TerrainChunk chunk = endlessTerrainScript.GetChunkFromCenter(chunkPos);
 
-        chunk.EditCube(rayDirection, hitInfo.point, groundCheck.position, addBlock, blockType);
+        TerrainChunk.OutOfBoundsType overLoad = chunk.EditCube(
+            rayDirection, hitInfo.point, 
+            groundCheck.position, addBlock, blockType
+            );
+        Vector3 adjustedPoint = Vector3.zero;
+        bool changed = false;
+        switch (overLoad)
+        {
+            case TerrainChunk.OutOfBoundsType.PosX:
+                adjustedPoint = hitInfo.transform.position + new Vector3(MapGenerator.GetMapVerts() / 2f + 1, 0 , 0);
+                changed = true;
+                break;
+            case TerrainChunk.OutOfBoundsType.NegX:
+                adjustedPoint = hitInfo.transform.position + new Vector3(-MapGenerator.GetMapVerts() / 2f - 1, 0, 0);
+                changed = true; 
+                break;
+            case TerrainChunk.OutOfBoundsType.PosZ:
+                adjustedPoint = hitInfo.transform.position + new Vector3(0, 0, MapGenerator.GetMapVerts() / 2f + 1);
+                changed = true;
+                break;
+            case TerrainChunk.OutOfBoundsType.NegZ:
+                adjustedPoint = hitInfo.transform.position + new Vector3(0, 0, - MapGenerator.GetMapVerts() / 2f - 1);
+                changed = true;
+                break;
+            default:
+                changed = false;
+                break;
+        }
+        if (changed)
+        {
+            chunk = endlessTerrainScript.GetChunkFromCenter(adjustedPoint);
+            
+            chunk.EditCube(
+            rayDirection, hitInfo.point,
+            groundCheck.position, addBlock, blockType
+            );
+
+        }
     }
 
     /// <summary>

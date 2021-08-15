@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class TerrainChunk
 {
+    #region SubClasses
+    public enum OutOfBoundsType { PosX, NegX, PosZ, NegZ, Height, None}
+    #endregion
+
+
     #region Variables
     private GameObject mesh;                                // Game object that is rendered
     private Vector2 position;                               // Position of the object in 2d space. 
@@ -121,7 +126,8 @@ public class TerrainChunk
     /// <param name="feetPos">Vector3 which is the coordinate of the player feet</param>
     /// <param name="fill">whether to fill the block or delete</param>
     /// <param name="blockType">The type of block to fill if fill is true</param>
-    public void EditCube(Vector3 rayDirection, Vector3 hitPoint, Vector3 feetPos, bool fill, short blockType)
+    /// <returns>An out of bounds enum that indicates in which way the edit was out of bounds (this is to edit the borders)</returns>
+    public OutOfBoundsType EditCube(Vector3 rayDirection, Vector3 hitPoint, Vector3 feetPos, bool fill, short blockType)
     {
         Vector3 localPoint = hitPoint - positionV3;
         Vector3 arraySize, arrayFloat, feetFloat;
@@ -133,12 +139,18 @@ public class TerrainChunk
         arrayFloat = localPoint + arraySize * 0.5f;
         feetFloat = feetPos + arraySize * 0.5f;
 
+
+
         arrayIndex = new Vector3Int(Mathf.FloorToInt(arrayFloat.x), Mathf.FloorToInt(arrayFloat.y), Mathf.FloorToInt(arrayFloat.z));
-        arrayIndex = CorrectCoords(rayDirection, localPoint, arrayIndex, fill, true);
+
+
+
+        arrayIndex = CorrectCoords(rayDirection, arrayFloat, arrayIndex, fill, false);
+
 
         if (!ValidCoords(arrayIndex))
         {
-            return;
+            return FindOverload(arraySize, arrayIndex);
         }
 
         feetIndex = new Vector3Int(Mathf.FloorToInt(feetFloat.x), Mathf.FloorToInt(feetFloat.y), Mathf.FloorToInt(feetFloat.z));
@@ -146,7 +158,7 @@ public class TerrainChunk
 
         if (fill && Utilities.Equal(feetIndex, arrayIndex))
         {
-            return;
+            return OutOfBoundsType.None;
         }
 
 
@@ -155,7 +167,37 @@ public class TerrainChunk
         lodMeshes[0].hasRequestedMesh = false;
         prevLODIndex = -1;
         UpdateChunk();
+        return OutOfBoundsType.None;
+    }
 
+    /// <summary>
+    /// Given that the array index is one that is out of the bounds of the array
+    /// This method will return the type of unbounded index. 
+    /// </summary>
+    /// <param name="arraySize">The array size.</param>
+    /// <param name="arrayIndex">The index to check</param>
+    /// <returns></returns>
+    private static OutOfBoundsType FindOverload(Vector3 arraySize, Vector3Int arrayIndex)
+    {
+        if (arrayIndex.x < 0)
+        {
+            return OutOfBoundsType.NegX;
+        }
+        if (arrayIndex.x >= arraySize.x)
+        {
+            return OutOfBoundsType.PosX;
+        }
+
+        if (arrayIndex.z < 0)
+        {
+            return OutOfBoundsType.NegZ;
+        }
+
+        if (arrayIndex.z >= arraySize.z)
+        {
+            return OutOfBoundsType.PosZ;
+        }
+        return OutOfBoundsType.Height;
     }
 
     /// <summary>
