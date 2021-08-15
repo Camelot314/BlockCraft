@@ -44,11 +44,14 @@ public class EndlessTerrain : MonoBehaviour
     /// </summary>
     /// <param name="chunkPos"></param>
     /// <returns></returns>
-    public TerrainChunk GetTerrainChunk(Vector3 chunkPos)
+    public TerrainChunk GetChunkFromCenter(Vector3 chunkPos)
     {
-        Vector2Int chunkCoord = new Vector2Int((int) chunkPos.x / chunkSize, (int) chunkPos.z / chunkSize);
+        Debug.Log("input = " + chunkPos);
+        int chunkX = Mathf.RoundToInt(chunkPos.x / (float)chunkSize);
+        int chunkZ = Mathf.RoundToInt(chunkPos.z / (float)chunkSize);
+        Vector2Int fromAny = new Vector2Int(chunkX, chunkZ);
 
-        return allChunks[chunkCoord];
+        return allChunks[fromAny];
     }
     
     /// <summary>

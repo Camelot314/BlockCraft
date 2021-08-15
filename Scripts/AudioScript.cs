@@ -9,21 +9,20 @@ public class AudioScript : MonoBehaviour
     [SerializeField] private AudioClip[] audioClips;
 
     private int currentTrack;
+    private System.Random random;
     #endregion
 
     #region Unity Methods
     private void Awake()
     {
+        random = new System.Random();
         audioSource.volume = 0.5f;
-        audioSource.clip = audioClips[0];
+        int clipNumber = random.Next(0, audioClips.Length);
+        audioSource.clip = audioClips[clipNumber];
         audioSource.Play();
-        Invoke("NextTrack", audioClips[0].length);
+        Invoke("NextTrack", clipNumber);
     }
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
     #endregion
 
 
@@ -34,13 +33,7 @@ public class AudioScript : MonoBehaviour
     /// </summary>
     private void NextTrack()
     {
-        if (currentTrack == audioClips.Length - 1)
-        {
-            currentTrack = 0;
-        } else
-        {
-            currentTrack++;
-        }
+        currentTrack = random.Next(0, audioClips.Length);
         audioSource.clip = audioClips[currentTrack];
         audioSource.Play();
         Invoke("NextTrack", audioClips[currentTrack].length);
@@ -50,7 +43,25 @@ public class AudioScript : MonoBehaviour
 
     #region Public Methods
 
+    /// <summary>
+    /// Pauses the audio source and prevents the next track from playing too soon.
+    /// </summary>
+    /// <param name="shouldPause"></param>
+    public void Pause(bool shouldPause)
+    {
+        if (shouldPause)
+        {
+            audioSource.Pause();
+            CancelInvoke();
+        } else
+        {
+            audioSource.Play();
+            float time = audioSource.clip.length - audioSource.time;
+            time = time < 0 ? 0 : time;
+            Invoke("NextTrack", time);
+        }
 
+    }
 
     #endregion
 }
