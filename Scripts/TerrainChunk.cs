@@ -124,39 +124,43 @@ public class TerrainChunk
     /// <param name="rayDirection">Direction the player is looking in</param>
     /// <param name="hitPoint">World space coordinate of the point where the ray hit (exact point where looking)</param>
     /// <param name="feetPos">Vector3 which is the coordinate of the player feet</param>
+    /// <param name="playerPos">Vector3 for the player position so player can't place where they are standing </param>
     /// <param name="fill">whether to fill the block or delete</param>
     /// <param name="blockType">The type of block to fill if fill is true</param>
     /// <returns>An out of bounds enum that indicates in which way the edit was out of bounds (this is to edit the borders)</returns>
-    public OutOfBoundsType EditCube(Vector3 rayDirection, Vector3 hitPoint, Vector3 feetPos, bool fill, short blockType)
+    public OutOfBoundsType EditCube(Vector3 rayDirection, Vector3 hitPoint, Vector3 feetPos, Vector3 playerPos, bool fill, short blockType)
     {
         Vector3 localPoint = hitPoint - positionV3;
-        Vector3 arraySize, arrayFloat, feetFloat;
-        Vector3Int arrayIndex, feetIndex;
+        Vector3 feetLocal = feetPos - positionV3;
+        Vector3 playerLocal = playerPos - positionV3;
+        Vector3 arraySize, arrayFloat, feetFloat, playerFloat;
+        Vector3Int arrayIndex, feetIndex, playerIndex;
         
         arraySize = new Vector3(mapData.heightMap.GetLength(0), MeshGenerator.GetChunkHeight(), mapData.heightMap.GetLength(1));
 
 
         arrayFloat = localPoint + arraySize * 0.5f;
-        feetFloat = feetPos + arraySize * 0.5f;
-
+        feetFloat = feetLocal + arraySize * 0.5f;
+        playerFloat = playerLocal + arraySize * 0.5f;
 
 
         arrayIndex = new Vector3Int(Mathf.FloorToInt(arrayFloat.x), Mathf.FloorToInt(arrayFloat.y), Mathf.FloorToInt(arrayFloat.z));
-
-
+        feetIndex = new Vector3Int(Mathf.FloorToInt(feetFloat.x), Mathf.FloorToInt(feetFloat.y), Mathf.FloorToInt(feetFloat.z));
+        playerIndex = new Vector3Int(Mathf.FloorToInt(playerFloat.x), Mathf.FloorToInt(playerFloat.y), Mathf.FloorToInt(playerFloat.z));
 
         arrayIndex = CorrectCoords(rayDirection, arrayFloat, arrayIndex, fill, false);
-
+        feetIndex = CorrectCoords(rayDirection, localPoint, feetIndex, fill, false);
+        playerIndex = CorrectCoords(rayDirection, playerFloat, playerIndex, !fill, false);
 
         if (!ValidCoords(arrayIndex))
         {
             return FindOverload(arraySize, arrayIndex);
         }
 
-        feetIndex = new Vector3Int(Mathf.FloorToInt(feetFloat.x), Mathf.FloorToInt(feetFloat.y), Mathf.FloorToInt(feetFloat.z));
-        feetIndex = CorrectCoords(rayDirection, localPoint, feetIndex, fill, false);
 
-        if (fill && Utilities.Equal(feetIndex, arrayIndex))
+        Vector3Int midBodyIndex = new Vector3Int(playerIndex.x, playerIndex.y - 1, playerIndex.z);
+
+        if (fill && (Utilities.Equal(arrayIndex, playerIndex) || Utilities.Equal(feetIndex, arrayIndex) || Utilities.Equal(midBodyIndex, arrayIndex)))
         {
             return OutOfBoundsType.None;
         }

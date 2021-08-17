@@ -423,7 +423,7 @@ public class Player : MonoBehaviour
 
         TerrainChunk.OutOfBoundsType overLoad = chunk.EditCube(
             rayDirection, hitInfo.point, 
-            groundCheck.position, addBlock, blockType
+            groundCheck.position, transform.position, addBlock, blockType
             );
         Vector3 adjustedPoint = Vector3.zero;
         bool changed = false;
@@ -455,7 +455,7 @@ public class Player : MonoBehaviour
             
             chunk.EditCube(
             rayDirection, hitInfo.point,
-            groundCheck.position, addBlock, blockType
+            groundCheck.position, transform.position, addBlock, blockType
             );
 
         }
