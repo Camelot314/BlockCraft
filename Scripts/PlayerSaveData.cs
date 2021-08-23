@@ -40,7 +40,7 @@ public class PlayerSaveData
     /// <returns>Vector3</returns>
     public Vector3 GetPosVector()
     {
-        return new Vector3(position[0], position[1], position[2]);
+        return new Vector3(position[0], position[1], position[2] + 0.05f);
     }
 
 }
